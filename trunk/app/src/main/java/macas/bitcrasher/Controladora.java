@@ -1,0 +1,266 @@
+package macas.bitcrasher;
+
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.drawable.BitmapDrawable;
+import android.os.CountDownTimer;
+import android.view.View;
+import android.widget.ImageView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Created by Owner on 9/13/2014.
+ */
+public class Controladora {
+
+    private Principal pnpl;
+    private boolean pantallaPrincipal = true;
+    private float width = 0;
+    private float heigth = 0;
+    private CountDownTimer tiempo;
+    ////////// parametros campo \\\\\\\\\\\\\\\\
+    private List<Point> puntos = new ArrayList<Point>();
+    ////////// parametros jugadores \\\\\\\\\\\\\
+    private Point jugador1 = new Point(0,0);
+    private Point jugador2 = new Point(0,0);
+    private float x1,x2,y1,y2;
+    private boolean jugando = false;
+    // direcciones
+    /*
+        0
+    1       3
+        2
+     */
+    private int direccion1 = 2;
+    private int direccion2 = 0;
+
+    public Controladora(){
+
+    }
+
+    public void setPrincipal(Principal prcpl){
+        pnpl = prcpl;
+    }
+
+    public void tap(float x, float y, float w, float h){
+        if(pantallaPrincipal) {
+        //esta en la pantalla principal del juego, se inicia el juego, se cambia el fondo
+            width = w;
+            heigth = h;
+            pnpl.cambiarFondo(1);
+            pantallaPrincipal = false;
+            iniciarJuego();
+        }else { // para esta parte ver la imagen "Areas Direccion"
+                if(y<(h/6)){ // AREA 1
+                if(direccion1 != 2){
+                    direccion1 = 0;
+                }
+                }else if(y>(2*(h/6)) && y < (h/2)){ // AREA 4
+                    if(direccion1 != 0){
+                        direccion1 = 2;
+                    }
+
+            } else if(y>(h/6) && y<(2*(h/6))){ // AREA 2 Y 3
+             if(x<(w/2)){
+                 //AREA 2
+                 if(direccion1 != 3){
+                     direccion1 = 1;
+                 }
+             }else{
+                 //AREA 3
+                 if(direccion1 != 1){
+                     direccion1 = 3;
+                 }
+             }
+            }else if(y>(5*(h/6))){ // AREA 8
+                    if(direccion2 != 0){
+                        direccion2 = 2;
+                    }
+                } else if(y<(5*(h/6)) && y > (4*(h/6))){ // AREA 6 Y 7
+                    if(x<(w/2)){
+                        //AREA 6
+                        if(direccion2 != 3){
+                            direccion2 = 1;
+                        }
+                    }else{
+                        //AREA 7
+                        if(direccion2 != 1){
+                            direccion2 = 3;
+                        }
+                    }
+                }else if(y>(h/2) && y < (4*(h/6))){ // AREA 5
+                    if(direccion2 != 2){
+                        direccion2 = 0;
+                    }
+                }
+
+        }
+    }
+
+    private void iniciarJuego(){
+        x1 = width/2;
+        y1 = heigth/8;
+        x2 = x1;
+        y2 = heigth-(heigth/8);
+        pnpl.dibujar(x1,y1,true);
+        pnpl.dibujar(x2,y2,false);
+        puntos.add(new Point(x1,y1));
+        puntos.add(new Point(x2,y2));
+
+        tiempo = new CountDownTimer(60000, 100) { //el segundo parametro es la velocidad.
+
+            public void onTick(long millisUntilFinished) {
+                pnpl.msg = millisUntilFinished/1000;
+                pnpl.invalidate();
+                avanzar();
+            }
+
+            public void onFinish() {
+                pnpl.msg = 0;
+                pnpl.cambiarFondo(4);
+            }
+        };
+        tiempo.start();
+    }
+    private void avanzar(){
+
+    float avance = 5;
+        //jugador 1
+        /* Direcciones
+        0
+    1       3
+        2
+        */
+        switch(direccion1) {
+            case 0 : // arriba
+                y1-=avance;
+                break;
+            case 1 : // izquierda
+                x1-=avance;
+                break;
+            case 2 : // abajo
+                y1+=avance;
+                break;
+            case 3 : // derecha
+                x1+=avance;
+                break;
+            default:
+                break;
+        }
+        //jugador 2
+        switch (direccion2){
+            case 0 : // arriba
+                y2-=avance;
+                break;
+            case 1 : // izquierda
+                x2-=avance;
+                break;
+            case 2 : // abajo
+                y2+=avance;
+                break;
+            case 3 : // derecha
+                x2+=avance;
+                break;
+            default:
+                break;
+        }
+        switch (verificarChoque()){
+            case 0:
+                pnpl.dibujar(x1, y1, true);
+                pnpl.dibujar(x2,y2,false);
+                puntos.add(new Point(x1,y1));
+                puntos.add(new Point(x2,y2));
+                break;
+            case 1://perdio 1
+                pnpl.cambiarFondo(2);
+                tiempo.cancel();
+                break;
+            case 2://perdio 2
+                pnpl.cambiarFondo(3);
+                tiempo.cancel(); break;
+            case 3:// empate
+                pnpl.cambiarFondo(4);
+                tiempo.cancel();
+                break;
+        }
+    }
+
+    private int verificarChoque(){
+    int salida = 0 ; //  0=nada, 1=choco 1, 2=choco 2, 3=empate
+
+    float x =0;
+    float y =0;
+    for (Point pot : puntos){
+        x = pot.x;
+        y = pot.y;
+        switch (direccion1){
+            case 0://arriba
+                if (y<y1 && y>(y1-8) && x<x1 && x1<(x+8) ){
+                    salida = 1;
+                }
+                break;
+            case 1://izq
+                if (x<x1 && x>(x1-8) && y<y1 && y1<(y+8)){
+                    salida = 1;
+                }
+                break;
+            case 2://abajo
+                if (y>y1 && y<(y1+8) && x<x1 && x1<(x+8)){
+                    salida = 1;
+                }
+                break;
+            case 3://dere
+                if (x>x1 && x<(x1+8) && y<y1 && y1<(y+8)){
+                    salida = 1;
+                }
+                break;
+        }
+        switch (direccion2){
+            case 0://arriba
+                if (y<y2 && y>(y2-8) && x<x2 && x2<(x+8) ){
+                    if (salida == 1){
+                        salida = 3;
+                    }else {
+                        salida = 2;
+                    }
+                }
+                break;
+            case 1://izq
+                if (x<x2 && x>(x2-8) && y<y2 && y2<(y+8)){
+                    if (salida == 1){
+                        salida = 3;
+                    }else {
+                        salida = 2;
+                    }
+                }
+                break;
+            case 2://abajo
+                if (y>y2 && y<(y2+8) && x<x2 && x2<(x+8)){
+                    if (salida == 1){
+                        salida = 3;
+                    }else {
+                        salida = 2;
+                    }
+                }
+                break;
+            case 3://dere
+                if (x>x2 && x<(x2+8) && y<y2 && y2<(y+8)){
+                    if (salida == 1){
+                        salida = 3;
+                    }else {
+                        salida = 2;
+                    }
+                }
+                break;
+        }
+        if (salida != 0){
+            break;
+        }
+    }
+        return salida;
+    }
+
+}
