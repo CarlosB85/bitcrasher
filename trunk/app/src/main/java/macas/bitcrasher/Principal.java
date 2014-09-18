@@ -1,12 +1,10 @@
 package macas.bitcrasher;
 
-import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -18,13 +16,15 @@ public class Principal extends View{
 
     private List<Point> pointsRojos = new ArrayList<Point>();
     private List<Point> pointsVerdes = new ArrayList<Point>();
-    private Canvas cvs;
-    private Paint pnt = new Paint();
+    //private Paint pnt = new Paint();
     private Paint pntRojo = new Paint();
     private Paint pntVerde = new Paint();
     private Point punto;
     private Controladora ctrl;
-    public float msg = 99;
+    private Bitmap bmR0,bmR1,bmR2,bmR3,bmV0,bmV1,bmV2,bmV3;
+    //public float msg = 99;
+    public int pR = 0;
+    public int pV = 0;
 
    public Principal(Context contexto, Controladora control){
        super(contexto);
@@ -32,14 +32,21 @@ public class Principal extends View{
        ctrl.setPrincipal(this);
        setFocusable(true);
        setFocusableInTouchMode(true);
-       //pnt.setStyle(Paint.Style.STROKE);
-       pnt.setAntiAlias(true);
        pntRojo.setAntiAlias(true);
        pntVerde.setAntiAlias(true);
        punto = new Point(0, 0);
-       pntVerde.setARGB(255,180,255,0);
-       pntRojo.setARGB(255,255,0,0);
-       pnt.setARGB(255,255,255,255);
+       pntVerde.setARGB(200,100,120,0);
+       pntRojo.setARGB(200,100,0,0);
+       pntRojo.setTextSize(20);
+       pntVerde.setTextSize(20);
+       bmV0 = BitmapFactory.decodeResource(getResources(),R.drawable.p10);
+       bmV1 = BitmapFactory.decodeResource(getResources(),R.drawable.p11);
+       bmV2 = BitmapFactory.decodeResource(getResources(),R.drawable.p12);
+       bmV3 = BitmapFactory.decodeResource(getResources(),R.drawable.p13);
+       bmR0 = BitmapFactory.decodeResource(getResources(),R.drawable.p20);
+       bmR1 = BitmapFactory.decodeResource(getResources(),R.drawable.p21);
+       bmR2 = BitmapFactory.decodeResource(getResources(),R.drawable.p22);
+       bmR3 = BitmapFactory.decodeResource(getResources(),R.drawable.p23);
        setOnTouchListener(new OnTouchListener() {
            @Override
            public boolean onTouch(View view, MotionEvent event) {
@@ -47,11 +54,17 @@ public class Principal extends View{
                float py = event.getY();
                float w = view.getWidth();
                float h = view.getHeight();
-               ctrl.tap(px,py,w,h);
+               ctrl.tap(px, py, w, h);
                return true;
            }
        });
    }
+
+    public void reset(){
+        pointsRojos = new ArrayList<Point>();
+        pointsVerdes = new ArrayList<Point>();
+
+    }
 
     public void dibujar(float x, float y, boolean p1){
         if (p1){
@@ -93,36 +106,54 @@ public class Principal extends View{
 
     @Override
     public void onDraw(Canvas canvas) {
-        /*
-        for (int g = 1 ; g < pointsRojos.size()-1 ; g++) {
-            Point pot = pointsRojos.get(g);
-            Point prePot = pointsRojos.get(g-1);
-            Point posPot = pointsVerdes.get(g+1);
-            if ((prePot.x==pot.x && posPot.x==pot.x) || (prePot.y==pot.y && posPot.y==pot.y)){
-             pointsRojos.remove(pot);
-            }
-                canvas.drawLine(prePot.x, prePot.y, pot.x, pot.y, pntRojo);
 
+        if(ctrl.juegoTerminado){
+            pntRojo.setAlpha(50);
+            pntVerde.setAlpha(50);
+        }else{
+            pntRojo.setAlpha(255);
+            pntVerde.setAlpha(255);
         }
-        for (int g = 1 ; g < pointsVerdes.size()-1 ; g++) {
-            Point pot = pointsVerdes.get(g);
-            Point prePot = pointsVerdes.get(g-1);
-            Point posPot = pointsVerdes.get(g+1);
-            if ((prePot.x==pot.x && posPot.x==pot.x) || (prePot.y==pot.y && posPot.y==pot.y)){
-                pointsVerdes.remove(pot);
-            }
-                canvas.drawLine(prePot.x, prePot.y, pot.x, pot.y, pntVerde);
-
-        }*/
-
         for(Point pot : pointsRojos){
             canvas.drawCircle(pot.x,pot.y,4,pntRojo);
         }
         for(Point pot : pointsVerdes){
             canvas.drawCircle(pot.x,pot.y,4,pntVerde);
         }
-        canvas.drawText(pointsRojos.size() + " puntos Rojos",10,10,pnt);
-        canvas.drawText(pointsVerdes.size() + " puntos Verdes",10,20,pnt);
-        canvas.drawText(msg+" ",10,canvas.getHeight()/2,pnt);
+        if(pointsVerdes.size()>=1 && pointsRojos.size()>=1) {
+            switch (ctrl.direccion1) {//jugador 1 - bmVx
+                case 0:
+                    canvas.drawBitmap(bmV0, pointsVerdes.get(pointsVerdes.size()-1).x - (bmV0.getWidth()/2), pointsVerdes.get(pointsVerdes.size()-1).y, pntVerde);
+                    break;
+                case 1:
+                    canvas.drawBitmap(bmV1, pointsVerdes.get(pointsVerdes.size()-1).x, pointsVerdes.get(pointsVerdes.size()-1).y - (bmV1.getHeight()/2), pntVerde);
+                    break;
+                case 2:
+                    canvas.drawBitmap(bmV2, pointsVerdes.get(pointsVerdes.size()-1).x - (bmV2.getWidth()/2), pointsVerdes.get(pointsVerdes.size()-1).y - bmV2.getHeight(), pntVerde);
+                    break;
+                case 3:
+                    canvas.drawBitmap(bmV3, pointsVerdes.get(pointsVerdes.size()-1).x - bmV3.getWidth(), pointsVerdes.get(pointsVerdes.size()-1).y - (bmV3.getHeight()/2), pntVerde);
+                    break;
+            }
+            switch (ctrl.direccion2) {//jugador 2 - bmRx
+                case 0:
+                    canvas.drawBitmap(bmR0, pointsRojos.get(pointsRojos.size()-1).x - (bmR0.getWidth()/2), pointsRojos.get(pointsRojos.size()-1).y, pntRojo);
+                    break;
+                case 1:
+                    canvas.drawBitmap(bmR1, pointsRojos.get(pointsRojos.size()-1).x, pointsRojos.get(pointsRojos.size()-1).y - (bmR1.getHeight()/2), pntRojo);
+                    break;
+                case 2:
+                    canvas.drawBitmap(bmR2, pointsRojos.get(pointsRojos.size()-1).x - (bmR2.getWidth()/2), pointsRojos.get(pointsRojos.size()-1).y - bmV2.getHeight(), pntRojo);
+                    break;
+                case 3:
+                    canvas.drawBitmap(bmR3, pointsRojos.get(pointsRojos.size()-1).x - bmR3.getWidth(), pointsRojos.get(pointsRojos.size()-1).y - (bmR3.getHeight()/2), pntRojo);
+                    break;
+            }
+
+            canvas.rotate(180, canvas.getWidth() / 2, canvas.getHeight() / 2);
+            canvas.drawText("Puntaje : " + pR, 10, canvas.getHeight() - 10, pntRojo);
+            canvas.rotate(180, canvas.getWidth() / 2, canvas.getHeight() / 2);
+            canvas.drawText("Puntaje : " + pV, 10, canvas.getHeight() - 10, pntVerde);
+        }
     }
 }
